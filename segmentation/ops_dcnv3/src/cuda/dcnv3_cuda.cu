@@ -29,9 +29,9 @@ at::Tensor dcnv3_cuda_forward(const at::Tensor &input, const at::Tensor &offset,
     AT_ASSERTM(input.is_contiguous(), "input tensor has to be contiguous");
     AT_ASSERTM(offset.is_contiguous(), "offset tensor has to be contiguous");
     AT_ASSERTM(mask.is_contiguous(), "mask tensor has to be contiguous");
-    AT_ASSERTM(input.type().is_cuda(), "input must be a CUDA tensor");
-    AT_ASSERTM(offset.type().is_cuda(), "offset must be a CUDA tensor");
-    AT_ASSERTM(mask.type().is_cuda(), "mask must be a CUDA tensor");
+    AT_ASSERTM(input.is_cuda(), "input must be a CUDA tensor");
+    AT_ASSERTM(offset.is_cuda(), "offset must be a CUDA tensor");
+    AT_ASSERTM(mask.is_cuda(), "mask must be a CUDA tensor");
 
     const int batch = input.size(0);
     const int height_in = input.size(1);
@@ -67,7 +67,7 @@ at::Tensor dcnv3_cuda_forward(const at::Tensor &input, const at::Tensor &offset,
         auto columns = output_n.select(0, n);
         // AT_DISPATCH_FLOATING_TYPES(
         AT_DISPATCH_FLOATING_TYPES_AND_HALF(
-            input.type(), "ms_deform_attn_forward_cuda", ([&] {
+            input.scalar_type(), "ms_deform_attn_forward_cuda", ([&] {
                 dcnv3_im2col_cuda(
                     at::cuda::getCurrentCUDAStream(),
                     input.data<scalar_t>() + n * im2col_step_ * per_input_size,
@@ -98,10 +98,10 @@ dcnv3_cuda_backward(const at::Tensor &input, const at::Tensor &offset,
     AT_ASSERTM(mask.is_contiguous(), "mask tensor has to be contiguous");
     AT_ASSERTM(grad_output.is_contiguous(),
                "grad_output tensor has to be contiguous");
-    AT_ASSERTM(input.type().is_cuda(), "input must be a CUDA tensor");
-    AT_ASSERTM(offset.type().is_cuda(), "offset must be a CUDA tensor");
-    AT_ASSERTM(mask.type().is_cuda(), "mask must be a CUDA tensor");
-    AT_ASSERTM(grad_output.type().is_cuda(),
+    AT_ASSERTM(input.is_cuda(), "input must be a CUDA tensor");
+    AT_ASSERTM(offset.is_cuda(), "offset must be a CUDA tensor");
+    AT_ASSERTM(mask.is_cuda(), "mask must be a CUDA tensor");
+    AT_ASSERTM(grad_output.is_cuda(),
                "grad_output must be a CUDA tensor");
 
     const int batch = input.size(0);
@@ -145,7 +145,7 @@ dcnv3_cuda_backward(const at::Tensor &input, const at::Tensor &offset,
         auto grad_output_g = grad_output_n.select(0, n);
         // AT_DISPATCH_FLOATING_TYPES(
         AT_DISPATCH_FLOATING_TYPES_AND_HALF(
-            input.type(), "ms_deform_attn_backward_cuda", ([&] {
+            input.scalar_type(), "ms_deform_attn_backward_cuda", ([&] {
                 dcnv3_col2im_cuda(
                     at::cuda::getCurrentCUDAStream(),
                     grad_output_g.data<scalar_t>(),

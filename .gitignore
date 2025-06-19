@@ -8,3 +8,6 @@ checkpoint_dir/
 demo/
 pretrained/
 upload.py
+segmentation/ops_dcnv3/DCNv3.egg-info/
+segmentation/ops_dcnv3/build/
+segmentation/ops_dcnv3/dist
