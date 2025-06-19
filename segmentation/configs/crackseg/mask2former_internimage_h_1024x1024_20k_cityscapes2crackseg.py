@@ -158,7 +158,7 @@ data = dict(samples_per_gpu=2,
             train=dict(pipeline=train_pipeline),
             val=dict(pipeline=test_pipeline),
             test=dict(pipeline=test_pipeline))
-runner = dict(type='IterBasedRunner', max_iters=20000)
+runner = dict(type='IterBasedRunner', max_iters=80000)
 optimizer_config = dict(type='GradientCumulativeOptimizerHook', cumulative_iters=8, grad_clip=dict(max_norm=0.1, norm_type=2))
 checkpoint_config = dict(by_epoch=False, interval=1000, max_keep_ckpts=1)
 evaluation = dict(interval=1000, metric='mIoU', save_best='mIoU', pre_eval=True)
@@ -172,8 +172,8 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='InternImage-H-CrackSeg',       
-                name='exp2'
+                project='InternImage-H-CrackSeg-80k',       
+                name='exp1'
             )
         )
     ]
