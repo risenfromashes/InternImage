@@ -1,0 +1,21 @@
+Looking in links: https://download.openmmlab.com/mmcv/dist/cu128/torch2.8.0/index.html
+Requirement already satisfied: mmsegmentation in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (0.27.0)
+Requirement already satisfied: matplotlib in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from mmsegmentation) (3.9.4)
+Requirement already satisfied: mmcls>=0.20.1 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from mmsegmentation) (0.25.0)
+Requirement already satisfied: numpy in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from mmsegmentation) (1.26.4)
+Requirement already satisfied: packaging in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from mmsegmentation) (24.2)
+Requirement already satisfied: prettytable in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from mmsegmentation) (3.16.0)
+Ignoring mmcls: markers 'extra == "mim"' don't match your environment
+Ignoring mmcv-full: markers 'extra == "mim"' don't match your environment
+Ignoring mmcv-full: markers 'extra == "mim"' don't match your environment
+Requirement already satisfied: contourpy>=1.0.1 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from matplotlib->mmsegmentation) (1.3.0)
+Requirement already satisfied: cycler>=0.10 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from matplotlib->mmsegmentation) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from matplotlib->mmsegmentation) (4.58.4)
+Requirement already satisfied: kiwisolver>=1.3.1 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from matplotlib->mmsegmentation) (1.4.7)
+Requirement already satisfied: pillow>=8 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from matplotlib->mmsegmentation) (11.2.1)
+Requirement already satisfied: pyparsing>=2.3.1 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from matplotlib->mmsegmentation) (3.2.3)
+Requirement already satisfied: python-dateutil>=2.7 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from matplotlib->mmsegmentation) (2.9.0.post0)
+Requirement already satisfied: importlib-resources>=3.2.0 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from matplotlib->mmsegmentation) (6.5.2)
+Requirement already satisfied: zipp>=3.1.0 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from importlib-resources>=3.2.0->matplotlib->mmsegmentation) (3.23.0)
+Requirement already satisfied: six>=1.5 in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from python-dateutil>=2.7->matplotlib->mmsegmentation) (1.17.0)
+Requirement already satisfied: wcwidth in /users/shuaib/miniconda3/envs/internimage/lib/python3.9/site-packages (from prettytable->mmsegmentation) (0.2.13)
