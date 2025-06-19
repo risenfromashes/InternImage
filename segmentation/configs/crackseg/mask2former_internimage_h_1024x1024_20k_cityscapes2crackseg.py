@@ -143,22 +143,39 @@ test_pipeline = [
         ])
 ]
 optimizer = dict(
-    _delete_=True, type='AdamW', lr=1e-5, betas=(0.9, 0.999), weight_decay=0.05,
+    type='AdamW', lr=1e-5, betas=(0.9, 0.999), weight_decay=0.05,
     constructor='CustomLayerDecayOptimizerConstructor',
     paramwise_cfg=dict(num_layers=50, layer_decay_rate=0.95,
                        depths=[6, 6, 32, 6], offset_lr_scale=1.0))
-lr_config = dict(_delete_=True, policy='poly',
+lr_config = dict(policy='poly',
                  warmup='linear',
                  warmup_iters=1500,
                  warmup_ratio=1e-6,
                  power=1.0, min_lr=0.0, by_epoch=False)
 # By default, models are trained on 8 GPUs with 2 images per GPU
-data = dict(samples_per_gpu=8,
+data = dict(samples_per_gpu=2,
+            workers_per_gpu=1,
             train=dict(pipeline=train_pipeline),
             val=dict(pipeline=test_pipeline),
             test=dict(pipeline=test_pipeline))
 runner = dict(type='IterBasedRunner', max_iters=20000)
-optimizer_config = dict(_delete_=True, type='GradientCumulativeOptimizerHook', cumulative_iters=2, grad_clip=dict(max_norm=0.1, norm_type=2))
+optimizer_config = dict(type='GradientCumulativeOptimizerHook', cumulative_iters=8, grad_clip=dict(max_norm=0.1, norm_type=2))
 checkpoint_config = dict(by_epoch=False, interval=1000, max_keep_ckpts=1)
 evaluation = dict(interval=1000, metric='mIoU', save_best='mIoU', pre_eval=True)
 fp16 = dict(loss_scale=dict(init_scale=512))
+
+
+log_config = dict(
+    interval=50,  # log every 50 iterations
+    hooks=[
+        dict(type='TextLoggerHook'),
+        dict(
+            type='WandbLoggerHook',
+            init_kwargs=dict(
+                project='InternImage-H-CrackSeg',       
+                name='exp2'
+            )
+        )
+    ]
+)
+
