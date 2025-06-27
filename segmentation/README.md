@@ -37,10 +37,9 @@ conda activate internimage
   the [official installation instructions](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html)
 - Install `PyTorch>=1.10.0` and `torchvision>=0.9.0` with `CUDA>=10.2`:
 
-For examples, to install `torch==1.11` with `CUDA==11.3`:
 
 ```bash
-pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113  -f https://download.pytorch.org/whl/torch_stable.html
+pip install torch= torchvision==  -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
 - Install other requirements:
@@ -56,8 +55,8 @@ pip install opencv-python
 
 ```bash
 pip install -U openmim
-mim install mmcv-full==1.5.0
-mim install mmsegmentation==0.27.0
+mim install mmcv-full==1.7.2
+mim install mmsegmentation==0.29.1
 pip install timm==0.6.11 mmdet==2.28.1
 ```
 
