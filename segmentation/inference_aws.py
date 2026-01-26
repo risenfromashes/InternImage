@@ -29,6 +29,8 @@ from mmseg.apis import init_segmentor, inference_segmentor
 TABLE_NAME = os.environ.get("TABLE_NAME", "InferenceJobs")
 REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
 BUCKET = os.environ.get("INPUT_BUCKET")
+WEBHOOK_API_KEY = os.environ.get("LAMBDA_API_KEY")
+
 DEFAULT_CONFIG = "model/config.py"
 DEFAULT_CHECKPOINT = "model/model.pth"
 
@@ -36,6 +38,11 @@ DEFAULT_CHECKPOINT = "model/model.pth"
 dynamodb = boto3.resource("dynamodb", region_name=REGION)
 table = dynamodb.Table(TABLE_NAME)
 s3 = boto3.client("s3")
+
+WEBHOOK_HEADERS = {
+    "Content-Type": "application/json",
+    "x-api-key": WEBHOOK_API_KEY,
+}
 
 
 class Segmentor:
@@ -179,7 +186,9 @@ class JobManager:
                     "job_completion_timestamp": completion_ts,
                 }
 
-                requests.post(webhook_url, json=payload, timeout=5)
+                requests.post(
+                    webhook_url, json=payload, timeout=5, headers=WEBHOOK_HEADERS
+                )
                 print(f"Webhook sent to {webhook_url}")
             except Exception as e:
                 print(f"Webhook failed: {e}")
@@ -205,6 +214,7 @@ class JobManager:
                         "job_completion_timestamp": int(time.time()),
                     },
                     timeout=5,
+                    headers=WEBHOOK_HEADERS,
                 )
             except:
                 pass
