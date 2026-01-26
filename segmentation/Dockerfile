@@ -54,10 +54,12 @@ RUN pip install numpy==1.26.4 pydantic==1.10.13
 # Set the working directory
 WORKDIR /workspace
 
-COPY . .
+COPY ops_dcnv3 .
 
-WORKDIR ops_dcnv3
-RUN sh make.sh               
+WORKDIR /workspace/ops_dcnv3
+RUN sh make.sh
+
+COPY . .
 
 # 10. Final Configuration
 WORKDIR /workspace
