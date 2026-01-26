@@ -1,6 +1,6 @@
 FROM pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel
 
-# 2. Install System Dependencies required for compiling MMCV and Image Processing
+# 1. Install System Dependencies required for compiling MMCV and Image Processing
 # 'ninja-build' speeds up compilation; 'libgl1' is for OpenCV
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
@@ -10,7 +10,15 @@ RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
     wget \
+    curl \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
+
+# 2. Install AWS CLI v2 (Required for S3 interactions)
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf aws awscliv2.zip
 
 # 3. Create a clean Conda environment with Python 3.9.7 
 # We name it 'internimage'
