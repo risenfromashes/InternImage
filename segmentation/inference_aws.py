@@ -128,6 +128,7 @@ class JobManager:
         # Extract Webhook URL from Metadata (Case-insensitive check)
         meta = obj.get("Metadata", {})
         webhook = meta.get("webhook_url") or meta.get("callback_url")
+
         return webhook
 
     @staticmethod
@@ -264,6 +265,8 @@ def main():
             try:
                 # A. Download
                 webhook_url = JobManager.download_input(BUCKET, s3_key, local_path)
+
+                print(f"Got Webhook Url: {webhook_url}")
 
                 # B. Infer (Pass path directly for LoadImageFromFile)
                 mask = model.predict(local_path)

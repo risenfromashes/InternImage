@@ -116,7 +116,4 @@ def test_webhook_endpoint(job_id):
 if __name__ == "__main__":
     job_id = submit_inference_job(IMG_PATH)
 
-    if job_id:
-        poll_job_status(job_id)
-
     test_webhook_endpoint(job_id)
