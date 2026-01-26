@@ -50,3 +50,10 @@ COPY . .
 
 WORKDIR ops_dcnv3
 RUN sh make.sh               
+
+# 10. Final Configuration
+WORKDIR /workspace
+RUN chmod +x entrypoint.sh
+
+# Set the entrypoint
+ENTRYPOINT ["/workspace/entrypoint.sh"]
