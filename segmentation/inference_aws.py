@@ -251,6 +251,7 @@ def main():
             job_id = job["job_id"]
             s3_key = job["s3_input"]
             request_ts = job.get("created_at")  # Fetch timestamp from DB item
+            request_ts = int(request_ts) if request_ts else None
 
             local_path = f"/tmp/{job_id}.jpg"
             webhook_url = None
