@@ -40,42 +40,44 @@ s3 = boto3.client("s3")
 
 class Segmentor:
     """Wrapper for MMSegmentation Inference with Custom Pipeline."""
-    def __init__(self, config_path, checkpoint_path, device='cuda:0'):
+
+    def __init__(self, config_path, checkpoint_path, device="cuda:0"):
         print(f"--- Loading Model: {config_path} ---")
-        
+
         self.cfg = mmcv.Config.fromfile(config_path)
 
         # Inject Custom Pipeline
         img_norm_cfg = self.cfg.img_norm_cfg
         self.cfg.data.test.pipeline = [
-            dict(type='LoadImageFromFile'),
+            dict(type="LoadImageFromFile"),
             dict(
-                type='MultiScaleFlipAug',
+                type="MultiScaleFlipAug",
                 img_scale=None,
                 img_ratios=1.0,
                 flip=False,
                 transforms=[
-                    dict(type='Resize', keep_ratio=True),
-                    dict(type='ResizeToMultiple', size_divisor=32),
-                    dict(type='RandomFlip', prob=0.0),
-                    dict(type='Normalize', **img_norm_cfg),
-                    dict(type='ImageToTensor', keys=['img']),
-                    dict(type='Collect', keys=['img']),
-                ])
+                    dict(type="Resize", keep_ratio=True),
+                    dict(type="ResizeToMultiple", size_divisor=32),
+                    dict(type="RandomFlip", prob=0.0),
+                    dict(type="Normalize", **img_norm_cfg),
+                    dict(type="ImageToTensor", keys=["img"]),
+                    dict(type="Collect", keys=["img"]),
+                ],
+            ),
         ]
-        
-        self.cfg.model.test_cfg.mode = 'whole'  # Force whole image inference
-        
+
+        self.cfg.model.test_cfg.mode = "whole"  # Force whole image inference
+
         self.device = device
         self.model = init_segmentor(self.cfg, checkpoint=None, device=self.device)
-        
+
         # Load weights safely
-        checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
-        state = checkpoint.get('state_dict', checkpoint)
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+        state = checkpoint.get("state_dict", checkpoint)
         self.model.load_state_dict(state, strict=False)
         self.model.cuda()
         self.model.eval()
-        self.amp_ctx = torch.amp.autocast(device_type='cuda', dtype=torch.float16)
+        self.amp_ctx = torch.amp.autocast(device_type="cuda", dtype=torch.float16)
         print("Model Loaded & Pipeline Configured.")
 
     def predict(self, img_path):
@@ -87,9 +89,9 @@ class Segmentor:
 
 class JobManager:
     """Handles AWS Interactions: S3, DynamoDB, and Webhooks."""
-    
+
     @staticmethod
-    def get_pending_jobs(limit=50):
+    def get_pending_jobs(limit=1000):
         try:
             resp = table.query(
                 IndexName="StatusIndex",
@@ -109,7 +111,7 @@ class JobManager:
                 UpdateExpression="set #s = :s",
                 ExpressionAttributeNames={"#s": "status"},
                 ExpressionAttributeValues={":s": "RUNNING"},
-                ConditionExpression="attribute_exists(job_id)"
+                ConditionExpression="attribute_exists(job_id)",
             )
             return True
         except Exception:
@@ -119,13 +121,13 @@ class JobManager:
     def download_input(bucket, s3_key, local_path):
         """Downloads image and returns metadata (if any)."""
         obj = s3.get_object(Bucket=bucket, Key=s3_key)
-        
-        with open(local_path, 'wb') as f:
-            f.write(obj['Body'].read())
-            
+
+        with open(local_path, "wb") as f:
+            f.write(obj["Body"].read())
+
         # Extract Webhook URL from Metadata (Case-insensitive check)
-        meta = obj.get('Metadata', {})
-        webhook = meta.get('webhook_url') or meta.get('callback_url')
+        meta = obj.get("Metadata", {})
+        webhook = meta.get("webhook_url") or meta.get("callback_url")
         return webhook
 
     @staticmethod
@@ -134,12 +136,9 @@ class JobManager:
         res_key = f"results/{job_id}.png"
         mask_uint8 = (mask_array.astype(np.uint8)) * 255
         _, buf = cv2.imencode(".png", mask_uint8)
-        
+
         s3.put_object(
-            Bucket=bucket,
-            Key=res_key,
-            Body=buf.tobytes(),
-            ContentType="image/png"
+            Bucket=bucket, Key=res_key, Body=buf.tobytes(), ContentType="image/png"
         )
         return res_key
 
@@ -154,20 +153,20 @@ class JobManager:
             UpdateExpression="set #s = :s, result_key = :r, completed_at = :c",
             ExpressionAttributeNames={"#s": "status"},
             ExpressionAttributeValues={
-                ":s": "SUCCEEDED", 
+                ":s": "SUCCEEDED",
                 ":r": result_key,
-                ":c": completion_ts
+                ":c": completion_ts,
             },
         )
-        
+
         # 2. Fire Webhook
         if webhook_url:
             try:
                 # Generate Presigned URL for the payload
                 mask_url = s3.generate_presigned_url(
-                    'get_object',
-                    Params={'Bucket': bucket, 'Key': result_key},
-                    ExpiresIn=3600 # 1 Hour
+                    "get_object",
+                    Params={"Bucket": bucket, "Key": result_key},
+                    ExpiresIn=3600,  # 1 Hour
                 )
 
                 payload = {
@@ -176,7 +175,7 @@ class JobManager:
                     "mask_url": mask_url,
                     "s3_path": result_key,
                     "request_timestamp": request_ts,
-                    "job_completion_timestamp": completion_ts
+                    "job_completion_timestamp": completion_ts,
                 }
 
                 requests.post(webhook_url, json=payload, timeout=5)
@@ -193,23 +192,27 @@ class JobManager:
             ExpressionAttributeNames={"#s": "status"},
             ExpressionAttributeValues={":s": "FAILED", ":e": str(error_msg)},
         )
-        
+
         if webhook_url:
             try:
-                requests.post(webhook_url, json={
-                    "job_id": job_id,
-                    "status": "FAILED",
-                    "error": str(error_msg),
-                    "job_completion_timestamp": int(time.time())
-                }, timeout=5)
+                requests.post(
+                    webhook_url,
+                    json={
+                        "job_id": job_id,
+                        "status": "FAILED",
+                        "error": str(error_msg),
+                        "job_completion_timestamp": int(time.time()),
+                    },
+                    timeout=5,
+                )
             except:
                 pass
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', default=DEFAULT_CONFIG)
-    parser.add_argument('--checkpoint', default=DEFAULT_CHECKPOINT)
+    parser.add_argument("--config", default=DEFAULT_CONFIG)
+    parser.add_argument("--checkpoint", default=DEFAULT_CHECKPOINT)
     args = parser.parse_args()
 
     if not BUCKET:
@@ -224,10 +227,10 @@ def main():
         return
 
     print("Worker Ready. Polling Queue...")
-    
+
     # 2. Processing Loop
     idle_strikes = 0
-    
+
     while True:
         jobs = JobManager.get_pending_jobs()
 
@@ -246,8 +249,8 @@ def main():
         for job in jobs:
             job_id = job["job_id"]
             s3_key = job["s3_input"]
-            request_ts = job.get("created_at") # Fetch timestamp from DB item
-            
+            request_ts = job.get("created_at")  # Fetch timestamp from DB item
+
             local_path = f"/tmp/{job_id}.jpg"
             webhook_url = None
 
@@ -270,11 +273,11 @@ def main():
 
                 # D. Complete
                 JobManager.mark_complete(
-                    job_id=job_id, 
-                    result_key=result_key, 
+                    job_id=job_id,
+                    result_key=result_key,
                     bucket=BUCKET,
                     request_ts=request_ts,
-                    webhook_url=webhook_url
+                    webhook_url=webhook_url,
                 )
 
             except Exception as e:
