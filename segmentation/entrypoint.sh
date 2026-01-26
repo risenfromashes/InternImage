@@ -29,7 +29,7 @@ else
     echo "⬇️ Downloading recursive content from $S3_URI..."
     
     # --recursive copies the folder contents
-    aws s3 cp "$S3_URI" "$LOCAL_MODEL_DIR" --recursive --quiet
+    aws s3 cp "$S3_URI" "$LOCAL_MODEL_DIR" --recursive
     
     if [ $? -ne 0 ]; then
         echo "❌ Error downloading model directory."
