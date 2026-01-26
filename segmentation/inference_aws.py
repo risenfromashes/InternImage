@@ -73,7 +73,7 @@ class Segmentor:
         checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
         state = checkpoint.get('state_dict', checkpoint)
         self.model.load_state_dict(state, strict=False)
-        
+        self.model.cuda()
         self.model.eval()
         self.amp_ctx = torch.amp.autocast(device_type='cuda', dtype=torch.float16)
         print("Model Loaded & Pipeline Configured.")
