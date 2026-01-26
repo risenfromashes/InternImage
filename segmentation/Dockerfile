@@ -24,7 +24,7 @@ SHELL ["conda", "run", "-n", "internimage", "/bin/bash", "-c"]
 RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
 
 # 6. Install Build Dependencies for MMCV
-RUN pip install cython packaging opencv-python termcolor yacs pyyaml scipy
+RUN pip install cython packaging opencv-python termcolor yacs pyyaml scipy boto3
 
 # 7. Compile MMCV-Full 1.7.2 from Source
 # We set environment variables to force CUDA kernel compilation
