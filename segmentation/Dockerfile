@@ -59,6 +59,8 @@ COPY ops_dcnv3 ops_dcnv3
 WORKDIR ops_dcnv3
 RUN sh make.sh
 
+WORKDIR /workspace
+
 COPY . .
 
 # 10. Final Configuration
