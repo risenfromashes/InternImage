@@ -161,7 +161,7 @@ class JobManager:
             UpdateExpression="set #s = :s, result_key = :r, completed_at = :c",
             ExpressionAttributeNames={"#s": "status"},
             ExpressionAttributeValues={
-                ":s": "SUCCEEDED",
+                ":s": "SUCCESS",
                 ":r": result_key,
                 ":c": completion_ts,
             },
@@ -179,7 +179,7 @@ class JobManager:
 
                 payload = {
                     "job_id": job_id,
-                    "status": "SUCCEEDED",
+                    "status": "SUCCESS",
                     "mask_url": mask_url,
                     "s3_path": result_key,
                     "request_timestamp": request_ts,
@@ -276,8 +276,6 @@ def main():
             try:
                 # A. Download
                 webhook_url = JobManager.download_input(BUCKET, s3_key, local_path)
-
-                print(f"Got Webhook Url: {webhook_url}")
 
                 # B. Infer (Pass path directly for LoadImageFromFile)
                 mask = model.predict(local_path)
