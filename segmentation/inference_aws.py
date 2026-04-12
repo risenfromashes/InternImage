@@ -11,10 +11,13 @@ import mmcv
 import warnings
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 # --- SILENCE & SETUP ---
 warnings.filterwarnings("ignore")
 os.environ["TORCH_LOGS"] = "-all"
+
+TIMEOUT = 800
 
 # Import Custom Ops if present (InternImage/MMSeg specific)
 try:
@@ -135,8 +138,9 @@ class JobManager:
         # Extract Webhook URL from Metadata (Case-insensitive check)
         meta = obj.get("Metadata", {})
         webhook = meta.get("webhook_url") or meta.get("callback_url")
+        retry_url = meta.get("retry_url")
 
-        return webhook
+        return webhook, retry_url
 
     @staticmethod
     def upload_result(bucket, job_id, mask_array):
@@ -174,7 +178,7 @@ class JobManager:
                 mask_url = s3.generate_presigned_url(
                     "get_object",
                     Params={"Bucket": bucket, "Key": result_key},
-                    ExpiresIn=3600,  # 1 Hour
+                    ExpiresIn=36000,  # 10 Hours
                 )
 
                 payload = {
@@ -241,8 +245,18 @@ def main():
 
     # 2. Processing Loop
     idle_strikes = 0
+    start_time = time.time()
+    
+    # Store retry_url for use after timeout
+    final_retry_url = None
 
     while True:
+        # Check for timeout
+        elapsed = time.time() - start_time
+        if elapsed > TIMEOUT:
+            print(f"Worker timed out after {elapsed:.2f}s. Exiting loop.")
+            break
+
         jobs = JobManager.get_pending_jobs()
 
         if not jobs:
@@ -258,6 +272,10 @@ def main():
         print(f"Processing Batch: {len(jobs)} jobs found.")
 
         for job in jobs:
+            # Check for timeout inside batch loop too
+            if time.time() - start_time > TIMEOUT:
+                break
+
             job_id = job["job_id"]
             s3_key = job["s3_input"]
             request_ts = job.get("created_at")  # Fetch timestamp from DB item
@@ -275,7 +293,11 @@ def main():
 
             try:
                 # A. Download
-                webhook_url = JobManager.download_input(BUCKET, s3_key, local_path)
+                webhook_url, retry_url = JobManager.download_input(BUCKET, s3_key, local_path)
+                
+                # Update final_retry_url if present (assuming we want the latest one or any available)
+                if retry_url:
+                    final_retry_url = retry_url
 
                 # B. Infer (Pass path directly for LoadImageFromFile)
                 mask = model.predict(local_path)
@@ -299,7 +321,27 @@ def main():
             finally:
                 if os.path.exists(local_path):
                     os.remove(local_path)
+    
+    # Post-loop Retry Logic
+    if final_retry_url:
+        print(f"Polling retry URL: {final_retry_url}")
+        
+        @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+        def poll_retry_url(url):
+            print(f"Sending GET request to {url}")
+            response = requests.get(url, timeout=10, headers=WEBHOOK_HEADERS)
+            response.raise_for_status()
+            print("Retry request successful.")
+            return response
 
+        try:
+            poll_retry_url(final_retry_url)
+        except Exception as e:
+            print(f"Retry loop failed: {e}")
+    else:
+        print("No retry URL found.")
+
+    print("All done. Exiting.")
 
 if __name__ == "__main__":
     main()

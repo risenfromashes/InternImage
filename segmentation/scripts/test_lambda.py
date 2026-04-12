@@ -114,7 +114,7 @@ def test_webhook_endpoint(job_id):
 
 # --- MAIN EXECUTION ---
 if __name__ == "__main__":
-    for i in range(100):
+    for i in range(10):
         job_id = submit_inference_job(IMG_PATH)
 
     test_webhook_endpoint(job_id)
